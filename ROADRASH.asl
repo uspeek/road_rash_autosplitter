@@ -29,37 +29,63 @@ startup {
 
 init{
   vars.delay = 0;
+  vars.inLevel = 0;
+  vars.state = 0;
+  /*
+    0 - menu/loading/after race screen etc
+    1 - pre-race countdown
+    2 - in race
+    3 - finished race
+  */
+  vars.justStartedRace = 0;
+
   refreshRate = 60;
 }
 
+update{
+  vars.inLevel = (current.levelId < 6 && current.levelId > 0);
+  vars.justStartedRace = ((old.hasStarted == 5 && current.hasStarted != 5) || (old.hasStarted2 == 5 && current.hasStarted2 != 5));
+
+  if(vars.state == 0){ // menu, loading, after race screens etc
+    if(vars.inLevel) vars.state = 1;
+  }
+  else if(vars.state == 1){// in level during countdown
+    if(!vars.inLevel){ vars.state = 0;}
+    if(vars.justStartedRace){ vars.state = 2;}
+  }
+  else if(vars.state == 2){// race
+    if(!vars.inLevel){ vars.state = 0;}
+    if((current.hasFinished1 == 1 || current.hasFinished2 == 1) && vars.delay > 1 ) { vars.state = 3; } 
+  }
+  else if(vars.state == 3){// after crossing finish line
+      if(!vars.inLevel){ vars.state = 0;}
+  }
+  else vars.state = 0;
+}
+
 isLoading{
-  if(settings["removeLoadingChecks"]) return false;
-  if((current.hasFinished1 == 1 || current.hasFinished2 == 1) && vars.delay == 0) return true;
-  if(current.levelId > 5 || current.levelId == 0) return true;
-  if(current.hasStarted == 5 && current.hasStarted2 == 5) return true;
-  return false;
+  if(settings["removeLoadingChecks"] || vars.state == 2) return false;
+  return true;
 }
 
 start{
-  if(current.levelId < 6 && current.levelId > 0){
-    if(old.hasStarted2 == 5 && current.hasStarted2 != 5) return true;
-    if(old.hasStarted == 5 && current.hasStarted != 5) return true;
+  if(vars.inLevel){
+    if(vars.justStartedRace) return true;
+
     if((old.levelId > 6 || old.levelId == 0) && settings["startOnLevelLoad"]) return true;
   }
 }
 
 split{
   //split at the end of the race is delayed to be in sync with in-game time
-  if(current.levelId < 6 && current.levelId > 0){
-    if((vars.delay > 3) && current.hasFinished1 == 1 && current.hasFinished2 == 1){
-      vars.delay = 0;
-      return true;
-    }
-
-    if(
-      ((old.hasFinished1 == 0 || old.hasFinished2 == 0) &&
-      current.hasFinished1 == 1 && current.hasFinished2 == 1)
-      || vars.delay > 0
-    ) vars.delay++;
+  if((vars.delay > 1) && current.hasFinished1 == 1 && current.hasFinished2 == 1){
+    vars.delay = 0;
+    return true;
   }
+
+  if(
+    ((old.hasFinished1 == 0 || old.hasFinished2 == 0) &&
+    current.hasFinished1 == 1 && current.hasFinished2 == 1)
+    || vars.delay > 0
+  ) vars.delay++;
 }

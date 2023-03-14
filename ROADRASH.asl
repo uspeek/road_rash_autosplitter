@@ -1,16 +1,8 @@
 /**
- * Road Rash 1996 autosplitter & in-game timer
- * Author: uspeek & Molotok
+ * Road Rash 1996 PC autosplitter & in-game timer
+ * Authors: uspeek + Molotok
 **/
 state("ROADRASH"){
-/*  
-  old addresses
-
-  byte hasFinished1 : 0xC3DFC;
-  byte hasFinished2 : 0x6D980;
-  byte hasStarted : 0xC7498;
-  byte hasStarted2 : 0xC7294;
-*/
   byte hasStarted : 0xB7ECC;
   byte hasFinished : 0xC3DFC;
 
@@ -54,7 +46,6 @@ init{
   vars.justFinishedRace = false;
   vars.inRace = false;
 
-  vars.state = 0;
   vars.totalTime = 0;
 }
 
@@ -76,21 +67,25 @@ update{
 
 gameTime {
   if(vars.justFinishedRace){
-    if(current.playerPos == 1){ vars.totalTime += current.levelTime; }
-    else if(current.playerPos == 2){ vars.totalTime += current.levelTime2; }
-    else if(current.playerPos == 3){ vars.totalTime += current.levelTime3; }
-    else if(current.playerPos == 4){ vars.totalTime += current.levelTime4; }
-    else if(current.playerPos == 5){ vars.totalTime += current.levelTime5; }
-    else if(current.playerPos == 6){ vars.totalTime += current.levelTime6; }
-    else if(current.playerPos == 7){ vars.totalTime += current.levelTime7; }
-    else if(current.playerPos == 8){ vars.totalTime += current.levelTime8; }
-    else if(current.playerPos == 9){ vars.totalTime += current.levelTime9; }
-    else if(current.playerPos == 10){ vars.totalTime += current.levelTime10; }
-    else if(current.playerPos == 11){ vars.totalTime += current.levelTime11; }
-    else if(current.playerPos == 12){ vars.totalTime += current.levelTime12; }
-    else if(current.playerPos == 13){ vars.totalTime += current.levelTime13; }
-    else if(current.playerPos == 14){ vars.totalTime += current.levelTime14; }
-    else if(current.playerPos == 15){ vars.totalTime += current.levelTime15; }
+    switch((int)current.playerPos){
+      case 1: vars.totalTime += current.levelTime1;  break;
+      case 2: vars.totalTime += current.levelTime2;  break;
+      case 3: vars.totalTime += current.levelTime3;  break;
+      case 4: vars.totalTime += current.levelTime4;  break;
+      case 5: vars.totalTime += current.levelTime5;  break;
+      case 6: vars.totalTime += current.levelTime6;  break;
+      case 7: vars.totalTime += current.levelTime7;  break;
+      case 8: vars.totalTime += current.levelTime8;  break;
+      case 9: vars.totalTime += current.levelTime9;  break;
+      case 10: vars.totalTime += current.levelTime10;  break;
+      case 11: vars.totalTime += current.levelTime11;  break;
+      case 12: vars.totalTime += current.levelTime12;  break;
+      case 13: vars.totalTime += current.levelTime13;  break;
+      case 14: vars.totalTime += current.levelTime14;  break;
+      case 15: vars.totalTime += current.levelTime15;  break;
+      default: break;
+    }
+
     return TimeSpan.FromMilliseconds(vars.totalTime*100);
   }
 }
@@ -100,6 +95,8 @@ isLoading{
 }
 
 start{
+  // Starts timer on level load for RTA timing
+  // In case IGT timer moves a few seconds, it'll fix itself with gametime at the end
   if(vars.inLevel){
     if(!settings["ILSetting"] && (old.levelId > 6 || old.levelId == 0)) return true;
     if(settings["ILSetting"] && vars.justStartedRace) return true;
